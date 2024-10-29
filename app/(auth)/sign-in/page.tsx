@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { signInFormSchema } from "@/lib/auth-schema";
+import { toast } from "@/hooks/use-toast";
+import { authClient } from "@/lib/auth-client";
 
 export default function SignIn() {
   const form = useForm<z.infer<typeof signInFormSchema>>({
@@ -20,9 +22,27 @@ export default function SignIn() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof signInFormSchema>) {
-    console.log(values)
+  async function onSubmit(values: z.infer<typeof signInFormSchema>) {
+    const { email, password } = values;
+    const { data, error } = await authClient.signIn.email({
+      email,
+      password,
+      callbackURL: "/dashboard",
+    }, {
+      onRequest: () => {
+        toast({
+          title: "Please wait...",
+        })
+      },
+      onSuccess: () => {
+        form.reset()
+      },
+      onError: (ctx) => {
+        alert(ctx.error.message);
+      },
+    });
   }
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
